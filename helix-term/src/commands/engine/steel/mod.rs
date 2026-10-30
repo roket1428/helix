@@ -41,7 +41,6 @@ use helix_view::{
     theme::Color,
     DocumentId, Editor, Theme, ViewId,
 };
-use once_cell::sync::{Lazy, OnceCell};
 use serde_json::Value;
 use steel::{
     compiler::modules::steel_home,
@@ -66,7 +65,7 @@ use std::{
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Mutex, MutexGuard, RwLock, RwLockReadGuard, Weak,
+        LazyLock, Mutex, MutexGuard, OnceLock, RwLock, RwLockReadGuard, Weak,
     },
     time::{Duration, Instant, SystemTime},
 };
@@ -91,17 +90,17 @@ use components::helix_component_module;
 use super::{Context, TerminalEventReaderHandle};
 use insert::insert_char;
 
-static INTERRUPT_HANDLER: Lazy<Mutex<Option<Arc<InterruptHandler>>>> =
-    Lazy::new(|| Mutex::new(None));
-static SAFEPOINT_HANDLER: Lazy<Mutex<Option<Arc<SafepointHandler>>>> =
-    Lazy::new(|| Mutex::new(None));
+static INTERRUPT_HANDLER: LazyLock<Mutex<Option<Arc<InterruptHandler>>>> =
+    LazyLock::new(|| Mutex::new(None));
+static SAFEPOINT_HANDLER: LazyLock<Mutex<Option<Arc<SafepointHandler>>>> =
+    LazyLock::new(|| Mutex::new(None));
 
 static GLOBAL_OFFSET: AtomicUsize = AtomicUsize::new(0);
 
-static IDENTIFIERS_AVAILABLE_AFTER_BOOT: Lazy<Mutex<HashSet<InternedString>>> =
-    Lazy::new(|| Mutex::new(HashSet::default()));
+static IDENTIFIERS_AVAILABLE_AFTER_BOOT: LazyLock<Mutex<HashSet<InternedString>>> =
+    LazyLock::new(|| Mutex::new(HashSet::default()));
 
-static EVENT_READER: OnceCell<EventReader> = OnceCell::new();
+static EVENT_READER: OnceLock<EventReader> = OnceLock::new();
 
 static CTX: &str = "*helix.cx*";
 static CONFIG: &str = "*helix.config*";
@@ -258,8 +257,8 @@ fn setup() -> Engine {
 }
 
 // The Steel scripting engine instance. This is what drives the whole integration.
-pub static GLOBAL_ENGINE: Lazy<Mutex<steel::steel_vm::engine::Engine>> =
-    Lazy::new(|| Mutex::new(setup()));
+pub static GLOBAL_ENGINE: LazyLock<Mutex<steel::steel_vm::engine::Engine>> =
+    LazyLock::new(|| Mutex::new(setup()));
 
 static GENERATION: AtomicUsize = AtomicUsize::new(0);
 
@@ -414,7 +413,7 @@ where
     res
 }
 
-static BUFFER_EXTENSION_KEYMAP: Lazy<RwLock<BufferExtensionKeyMap>> = Lazy::new(|| {
+static BUFFER_EXTENSION_KEYMAP: LazyLock<RwLock<BufferExtensionKeyMap>> = LazyLock::new(|| {
     RwLock::new(BufferExtensionKeyMap {
         map: HashMap::new(),
         reverse: HashMap::new(),
@@ -443,7 +442,7 @@ struct LspCallRegistry {
     map: HashMap<LspCallRegistryId, LspKind>,
 }
 
-static LSP_CALL_REGISTRY: Lazy<RwLock<LspCallRegistry>> = Lazy::new(|| {
+static LSP_CALL_REGISTRY: LazyLock<RwLock<LspCallRegistry>> = LazyLock::new(|| {
     RwLock::new(LspCallRegistry {
         map: HashMap::new(),
     })
@@ -4175,7 +4174,7 @@ fn acquire_context_lock(
     callback_fn: SteelVal,
     place: Option<SteelVal>,
 ) -> steel::rvals::Result<()> {
-    static TASK_DONE: Lazy<SteelVal> = Lazy::new(|| SteelVal::SymbolV("done".into()));
+    static TASK_DONE: LazyLock<SteelVal> = LazyLock::new(|| SteelVal::SymbolV("done".into()));
 
     match (&callback_fn, &place) {
         (SteelVal::Closure(_), Some(SteelVal::CustomStruct(_))) => {}
