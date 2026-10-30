@@ -1877,11 +1877,7 @@ mod fold_highlighting_test {
             src.as_str().into(),
             None,
             Arc::new(ArcSwap::new(Arc::new(Config::default()))),
-            // `syntax::Loader` isn't `Clone`; the document gets its own independent instance,
-            // separate from the `loader` this function returns for the test to use directly.
-            Arc::new(ArcSwap::from_pointee(
-                helix_core::config::default_lang_loader(),
-            )),
+            Arc::new(ArcSwap::from_pointee(loader.clone())),
         );
         let lang = loader
             .language_for_name("rust")
