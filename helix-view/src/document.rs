@@ -17,7 +17,6 @@ use helix_event::TaskController;
 use helix_lsp::util::lsp_pos_to_pos;
 use helix_stdx::faccess::{copy_metadata, readonly};
 use helix_vcs::{DiffHandle, DiffProviderRegistry};
-use std::sync::OnceLock;
 use thiserror;
 
 use ::parking_lot::Mutex;
