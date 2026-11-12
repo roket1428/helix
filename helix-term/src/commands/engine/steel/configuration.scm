@@ -574,7 +574,7 @@
 (define (soft-wrap-kw #:enable [enable #f]
                       #:max-wrap [max-wrap 20]
                       #:max-indent-retain [max-indent-retain 40]
-                      #:wrap-indicator [wrap-indicator 4]
+                      #:wrap-indicator [wrap-indicator "↪"]
                       #:wrap-at-text-width [wrap-at-text-width #f])
   (define sw (helix.raw-soft-wrap))
   (helix.sw-enable sw enable)
